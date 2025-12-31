@@ -60,7 +60,7 @@
     };
 
     let currentWordText = '日本'; 
-    let currentTeacher = 'wen'; // 内部的には小文字で管理
+    let currentTeacher = 'wen'; 
 
     function checkPass() {
         if (document.getElementById('passInput').value === CONFIG.password) {
@@ -85,17 +85,12 @@
     }
 
     function playTeacherAudio() {
-        // 重要：ファイル名が「日本_wen.mp3」のように完全一致している必要があります
-        const fileName = CONFIG.audioFolder + currentWordText + "_" + currentTeacher + ".mp3";
-        console.log("Playing:", fileName); // 開発者ツールで確認用
-        
+        // ハイフン「-」を使用するように設定
+        const fileName = CONFIG.audioFolder + currentWordText + "-" + currentTeacher + ".mp3";
         const audio = new Audio(fileName);
-        audio.play().catch((err) => {
-            alert("音声が見つかりません。ファイル名を確認してください：\n" + fileName);
-        });
+        audio.play().catch(() => alert("音声が見つかりません：\n" + fileName));
     }
 
-    // --- 録音機能 (そのまま維持) ---
     let mediaRecorder, chunks = [], audioUrl;
     async function toggleRecording() {
         const btn = document.getElementById('recordBtn');
