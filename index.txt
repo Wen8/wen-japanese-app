@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>第1課：練習</title>
+    <style>
+        body { font-family: sans-serif; background: #fdfdfd; padding: 20px; text-align: center; }
+        .container { max-width: 450px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 12px; background: white; }
+        .hidden { display: none; }
+        .box { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #eee; }
+        .teacher-select button, .word-select button { padding: 10px 15px; margin: 5px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; background: white; }
+        .active { background: #333 !important; color: white; border-color: #333; }
+        .word-display { font-size: 2.2em; font-weight: bold; margin: 20px 0; color: #000; }
+        #recordBtn { width: 100%; padding: 15px; font-weight: bold; cursor: pointer; border-radius: 8px; border: none; background: #ff4757; color: white; }
+        #recordBtn.recording { background: #2f3542; }
+        .play-btn { background: #2ed573; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 1em; }
+    </style>
+</head>
+<body>
+
+<div id="loginGate" class="container">
+    <h3>第1課：練習場</h3>
+    <input type="password" id="passInput" placeholder="合言葉を入力" style="width:100%; box-sizing:border-box; padding:12px; margin-bottom:10px;">
+    <button onclick="checkPass()" style="width:100%; padding:10px; width:100%; cursor:pointer;">入室</button>
+</div>
+
+<div id="mainContent" class="container hidden">
+    <h3>第1課：国名</h3>
+
+    <div class="word-select">
+        <button id="w-1" class="active" onclick="setWord('日本', 'w-1')">日本</button>
+        <button id="w-2" onclick="setWord('中国', 'w-2')">中国</button>
+        <button id="w-3" onclick="setWord('アメリカ', 'w-3')">アメリカ</button>
+    </div>
+
+    <div class="box">
+        <div class="teacher-select">
+            <button id="t-wen" class="active" onclick="setTeacher('wen')">wen先生</button>
+            <button id="t-daishukyou" onclick="setTeacher('daishukyou')">daishukyou先生</button>
+        </div>
+        
+        <div class="word-display" id="wordText">日本</div>
+        
+        <button class="play-btn" onclick="playTeacherAudio()">📢 お手本を聴く</button>
+    </div>
+
+    <div class="box">
+        <p style="font-size: 0.8em; font-weight: bold; margin-bottom: 10px;">自分の練習</p>
+        <button id="recordBtn" onclick="toggleRecording()">🎤 録音スタート</button>
+        <div id="playMyVoiceArea" class="hidden">
+            <button class="play-btn" onclick="playMyAudio()" style="background: #1e90ff;">👂 自分の声を聴く</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const CONFIG = {
+        password: "daiik-ka",
+        audioFolder: "audio/1/"
+    };
+
+    let currentWordText = '日本'; 
+    let currentTeacher = 'wen'; 
+
+    function checkPass() {
+        if (document.getElementById('passInput').value === CONFIG.password) {
+            document.getElementById('loginGate').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+        } else {
+            alert("合言葉が違います");
+        }
+    }
+
+    function setWord(text, btnId) {
+        currentWordText = text;
+        document.getElementById('wordText').innerText = text;
+        document.querySelectorAll('.word-select button').forEach(b => b.classList.remove('active'));
+        document.getElementById(btnId).classList.add('active');
+    }
+
+    function setTeacher(id) {
+        currentTeacher = id;
+        document.querySelectorAll('.teacher-select button').forEach(b => b.classList.remove('active'));
+        document.getElementById('t-' + id).classList.add('active');
+    }
+
+    function playTeacherAudio() {
+        // 例: audio/1/日本_wen.mp3
+        const fileName = CONFIG.audioFolder + currentWordText + "_" + currentTeacher + ".mp3";
+        new Audio(fileName).play().catch(() => alert("音声が見つかりません:\n" + fileName));
+    }
+
+    // --- 録音機能 ---
+    let mediaRecorder, chunks = [], audioUrl;
+    async function toggleRecording() {
+        const btn = document.getElementById('recordBtn');
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    audioUrl = URL.createObjectURL(new Blob(chunks, { type: 'audio/wav' }));
+                    document.getElementById('playMyVoiceArea').classList.remove('hidden');
+                };
+                chunks = [];
+                mediaRecorder.start();
+                btn.innerText = "⏹ 停止"; btn.classList.add('recording');
+            } catch (e) { alert("マイクを許可してください"); }
+        } else {
+            mediaRecorder.stop();
+            btn.innerText = "🎤 録音スタート"; btn.classList.remove('recording');
+        }
+    }
+    function playMyAudio() { new Audio(audioUrl).play(); }
+</script>
+</body>
+</html>
